@@ -150,8 +150,8 @@ public class QuizActivity extends AppCompatActivity {
     }
 
     @Override
-    public void onSaveInstanceState(Bundle savedInstanceState) {        // save index and button state between config
-        super.onSaveInstanceState(savedInstanceState);                  // changes (preserve settings through rotations)
+    public void onSaveInstanceState(Bundle savedInstanceState) {        // save index, button, and answer states between
+        super.onSaveInstanceState(savedInstanceState);                  // orientation change
         Log.i(TAG, "onSaveInstanceState");
         savedInstanceState.putInt(KEY_INDEX, mCurrentIndex);
         savedInstanceState.putBooleanArray(String.valueOf(ANSWERED_STATE), mNotAnsweredArr);
@@ -194,6 +194,8 @@ public class QuizActivity extends AppCompatActivity {
     private void setButtonState(boolean butState) {
         mTrueButton.setEnabled(butState);   // set state of both buttons
         mFalseButton.setEnabled(butState);
-        mQuestionsBank[mCurrentIndex].setNotAnsweredTrue(butState);
+        if(butState == false) {                                         // if question has been answered, disable it
+            mQuestionsBank[mCurrentIndex].setNotAnsweredTrue(butState);
+        }
     }
 }
