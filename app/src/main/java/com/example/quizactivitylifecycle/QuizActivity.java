@@ -22,6 +22,8 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.text.DecimalFormat;
+
 // Cool tip: use Alt+Enter to summon IntelliJ and automatically add missing classes
 // Side note: using autocompletion will automatically import classes
 
@@ -29,6 +31,8 @@ public class QuizActivity extends AppCompatActivity {
 
     private static final String TAG = "QuizActivity";       // constant for identifying source in logs
     private static final String KEY_INDEX = "index";
+    private static final String USER_SCORE = "0";
+    private static final String TOTAL_ANSWERS = "0";
     private static final String BUTTON_STATE = "state";
     private static final String[] ANSWERED_STATE = new String[] { "state", "state", "state", "state", "state", "state"};
 
@@ -49,6 +53,8 @@ public class QuizActivity extends AppCompatActivity {
     };
 
     private int mCurrentIndex = 0;          // index of questions
+    private int mUserScore = 0;             // score tally
+    private int mTotalAnswers = 0;          // answer tally
     private boolean mButtonState = true;    // default button state
     private boolean[] mNotAnsweredArr =  {true, true, true, true, true, true}; // state of questions
 
@@ -59,10 +65,13 @@ public class QuizActivity extends AppCompatActivity {
         Log.d(TAG, "onCreate(Bundle) called");      // log onCreate event (must import log class)
         setContentView(R.layout.activity_main);
 
-        if(savedInstanceState != null) {                                       // check if a saved instance exists
-            mCurrentIndex = savedInstanceState.getInt(KEY_INDEX,0);
-            mButtonState = savedInstanceState.getBoolean(BUTTON_STATE);        // assign saved data to local vars
+        if(savedInstanceState != null) {                                           // check if a saved instance exists
+            mCurrentIndex = savedInstanceState.getInt(KEY_INDEX,0);     // assign saved data to local vars
+            mUserScore = savedInstanceState.getInt(USER_SCORE, 0);
+            mTotalAnswers = savedInstanceState.getInt(TOTAL_ANSWERS, 0);
+            mButtonState = savedInstanceState.getBoolean(BUTTON_STATE);
             mNotAnsweredArr = savedInstanceState.getBooleanArray(String.valueOf(ANSWERED_STATE));
+
         }
 
         mTrueButton = (Button) findViewById(R.id.true_button);   // create true button, set as listener, create onClick
@@ -154,6 +163,9 @@ public class QuizActivity extends AppCompatActivity {
         super.onSaveInstanceState(savedInstanceState);                  // orientation change
         Log.i(TAG, "onSaveInstanceState");
         savedInstanceState.putInt(KEY_INDEX, mCurrentIndex);
+        savedInstanceState.putInt(USER_SCORE, mUserScore);
+        savedInstanceState.putInt(TOTAL_ANSWERS, mTotalAnswers);
+        savedInstanceState.putBoolean(BUTTON_STATE, mButtonState);
         savedInstanceState.putBooleanArray(String.valueOf(ANSWERED_STATE), mNotAnsweredArr);
     }
 
@@ -171,8 +183,8 @@ public class QuizActivity extends AppCompatActivity {
 
     // method that updates the current question
     private void updateQuestion() {
-        int question = mQuestionsBank[mCurrentIndex].getTextResId();    // select and update question text based on
-        mQuestionTextView.setText(question);                            // questions index
+        int question = mQuestionsBank[mCurrentIndex].getTextResId();        // select and update question text based on
+        mQuestionTextView.setText(question);                                // questions index
         setButtonState(mQuestionsBank[mCurrentIndex].getNotAnsweredTrue());
     }
 
@@ -182,20 +194,29 @@ public class QuizActivity extends AppCompatActivity {
 
         int messageResId = 0;
 
-        if(userPressedTrue == answerIsTrue) {   // select a toast to display
+        if(userPressedTrue == answerIsTrue) {           // select a toast to display
             messageResId = R.string.correct_toast;
+            ++mUserScore;
         } else {
             messageResId = R.string.incorrect_toast;
         }
 
         Toast.makeText(this, messageResId, Toast.LENGTH_SHORT).show();  // display toast
+        ++mTotalAnswers;                                                       // add to answer tally
+
+        if(mTotalAnswers == 6) {
+            float mScore = ((float) mUserScore / 6) * 100;                                  // calculate and display
+            mScore = Math.round(mScore);                                                    // user score with toast
+            String scoreMessage = "Score: " + (int) mScore + "%";
+            Toast.makeText(this, scoreMessage, Toast.LENGTH_LONG).show();
+        }
     }
 
     private void setButtonState(boolean butState) {
         mTrueButton.setEnabled(butState);   // set state of both buttons
         mFalseButton.setEnabled(butState);
         if(butState == false) {                                         // if question has been answered, disable it
-            mQuestionsBank[mCurrentIndex].setNotAnsweredTrue(butState);
+            mQuestionsBank[mCurrentIndex].setNotAnsweredTrue(false);
         }
     }
 }
